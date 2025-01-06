@@ -17,18 +17,15 @@ async def showplayerlist():
     global gamechannel
 
     embed = discord.Embed(
-            colour=discord.Colour.blurple(),
+            colour=discord.Colour.gold(),
             title="TRAIN OF THOUGHT PLAYERS",
             description="🔴 "+playerlist[0]
         )
-    if len(playerlist) == 2:
+    if len(playerlist) >= 2:
         embed.description += "\n🔵 "+playerlist[1]
-    if len(playerlist) == 3:
-        embed.description += "\n🔵 "+playerlist[2]
-        embed.description += "\n🟡 "+playerlist[3]
-    if len(playerlist) == 4:
-        embed.description += "\n🔵 "+playerlist[1]
+    if len(playerlist) >= 3:
         embed.description += "\n🟡 "+playerlist[2]
+    if len(playerlist) == 4:
         embed.description += "\n🟢 "+playerlist[3]
     await gamechannel.send(embed=embed)
     await choosestart()
@@ -40,9 +37,11 @@ async def choosestart():
     embed = discord.Embed(
             colour=discord.Colour.red(),
             title='HOSTER CHOOSES THE STARTING WORD',
-            description="{}: Type it below and send it".format(playerlist[0])
+            description="🔴({}) Type it below and send it".format(playerlist[0])
         )
     await gamechannel.send(embed=embed)
+    msg = await bot.wait_for('message')
+    await gamechannel.send(msg.content)
 
 #----------------------------------------------------------------#
 
