@@ -19,10 +19,10 @@ goinktype = ""
 
 prevword= ""
 word = ""
-finalword = ""
+endingword = ""
 totlist = []
 
-def halflength(word):
+def halflength(word):       #half life gap
     return int(-(-len(word) // 2))
 
 def checkboink(word1, word2):
@@ -57,10 +57,11 @@ while not gamegoing:
     if gamestartinput == "tot info":
         print("\nTRAIN OF THOUGHT PREMISE")
         print("=================================")
-        print("First, you pick a starting word")
-        print("You then manipulate this word into other words until you're sick of it")
+        print("Pick a starting word and ending word")
+        print("You then manipulate the starting word into other words until you reach the ending word")
         print("This word manipulation is known as a GOINK (GOOD + LINK)")
         print("Most plurals of words (ending with s) may not be counted as a GOINK")
+        print("If you want a challenge, then try to get to the ending word with the least GOINKs")
 
         print("\nGOINK TYPES")
         print("================")
@@ -88,6 +89,15 @@ if gamegoing:
             print("Not a real single word!")
     totlist.append(prevword)
     checkword = False
+    while not checkword:
+        endingword = input("Input the ending word: ")
+        checkword = endingword in englishvocab
+        if not checkword:
+            print("Not a real single word!")
+        elif endingword == prevword:
+            print("Cannot make the ending word the starting word!")
+            checkword=False
+    checkword = False
     print()
 
 while gamegoing:
@@ -102,9 +112,9 @@ while gamegoing:
                 if not checkword:
                     print("Not a real single word!\n")
         
-        if word == "tot end":
-            gamegoing = False
-            break
+        # if word == "tot end":
+        #     gamegoing = False
+        #     break
 
         if word in totlist:
             wordinlist = True
@@ -136,6 +146,10 @@ while gamegoing:
             checkword = False
         else:
             print(goinktype)
+            if word == endingword:
+                gamegoing = False
+                totlist.append(endingword)
+                break
        
     checkword = False
     goink = False
@@ -156,3 +170,4 @@ print("\n\nADDOINKS:",addoink)
 print("SUBOINKS:",suboink)
 print("FROINKS:",froink)
 print("BOINKS:",boink)
+print("\nRun the program again to play again")
