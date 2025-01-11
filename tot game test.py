@@ -47,7 +47,6 @@ print("TRAIN OF THOUGHT")
 print("==================")
 print("Type 'tot start' to start")
 print("Type 'tot info' to see game info")
-print("Input 'tot end' during a game to end it\n")
 
 
 while not gamegoing:
@@ -170,4 +169,12 @@ print("\n\nADDOINKS:",addoink)
 print("SUBOINKS:",suboink)
 print("FROINKS:",froink)
 print("BOINKS:",boink)
-print("\nRun the program again to play again")
+
+print("\nType end to end program")
+print("Run the program again to play again")
+
+end = ""
+while(end!="end"):
+    end = input()
+
+# U have to apprate
