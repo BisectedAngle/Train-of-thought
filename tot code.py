@@ -1,16 +1,22 @@
 import discord
 from discord.ext import commands
 from config import TOKEN
+from nltk.corpus import words
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!tot ", intents=intents)
+
+englishvocab = set(words.words())
+checkword = False
+prevword = ""
+totlist = []
 
 waiting_gamestart = False
 gamestartmessage_ID = 0
 gamechannel = 0
 gamehoster = ""
 playerlist = []
-wordtotot= ""
+
 
 async def showplayerlist():
     global playerlist
@@ -30,18 +36,41 @@ async def showplayerlist():
     await gamechannel.send(embed=embed)
     await choosestart()
 
+
 async def choosestart():
     global playerlist
     global gamechannel
+    global prevword
+    global englishvocab
+    global checkword
+
+    prevword = ""
+    checkword = False
 
     embed = discord.Embed(
             colour=discord.Colour.red(),
             title='HOSTER CHOOSES THE STARTING WORD',
             description="🔴({}) Type it below and send it".format(playerlist[0])
         )
+    
     await gamechannel.send(embed=embed)
-    msg = await bot.wait_for('message')
-    await gamechannel.send(msg.content)
+    while not checkword:
+        msg = await bot.wait_for('message')
+        if(msg.author.mention == playerlist[0]):
+            prevword = (msg.content).lower()
+            checkword = prevword in englishvocab
+            if not checkword:
+                await gamechannel.send("Not a real single word! (Please reinput)")
+    
+    totlist.append(prevword)
+
+    embed = discord.Embed(
+            colour=discord.Colour.red(),
+            title=prevword,
+            description="[next player]'s turn!")
+    
+    await gamechannel.send(embed=embed)
+
 
 #----------------------------------------------------------------#
 
@@ -57,10 +86,10 @@ async def start(ctx):
     global gamechannel
     global playerlist
 
-    gamehoster = ctx.author
-    print(gamehoster)
-
     if waiting_gamestart == False:
+        gamehoster = ctx.author
+        print(gamehoster)
+
         waiting_gamestart = True
         embed = discord.Embed(
             colour=discord.Colour.gold(),
