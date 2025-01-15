@@ -10,16 +10,65 @@ englishvocab = set(words.words())
 checkword = False
 prevword = ""
 totlist = []
+currplayer = 0
 
 waiting_gamestart = False
 gamestartmessage_ID = 0
 gamechannel = 0
 gamehoster = ""
 playerlist = []
+lifelist = []
+
+def iterateplayer(currplayer, playernum):
+    if currplayer == playernum-1:
+        return 0
+    else:
+        return currplayer+1
+    
+def getplayercolour(currplayer):
+    if currplayer == 0:
+        return discord.Colour.brand_red()
+    if currplayer == 1:
+        return discord.Colour.blue()
+    if currplayer == 2:
+        return discord.Colour.yellow()
+    if currplayer == 3:
+        return discord.Colour.brand_green()
+
+async def gameon():
+    global playerlist
+    global lifelist
+    global gamechannel
+    global prevword
+    global word
+    global englishvocab
+    global checkword
+    global currplayer
+    while True:
+        while not checkword:
+            msg = await bot.wait_for('message')
+            if(msg.author.mention == playerlist[currplayer]):
+                word = (msg.content).lower()
+                checkword = word in englishvocab
+                if not checkword:
+                    await msg.reply("Not a real single word! (Please reinput)",mention_author=False)
+        totlist.append(word)
+        checkword = False
+        currplayer = iterateplayer(currplayer,len(playerlist))
+
+        embed = discord.Embed(
+                colour=getplayercolour(currplayer),
+                title=word,
+                description="{}'s turn!".format(playerlist[currplayer]))
+        
+        print(prevword,word)
+        await msg.reply(embed=embed,mention_author=False)
+        prevword = word
 
 
 async def showplayerlist():
     global playerlist
+    global lifelist
     global gamechannel
 
     embed = discord.Embed(
@@ -43,6 +92,7 @@ async def choosestart():
     global prevword
     global englishvocab
     global checkword
+    global currplayer
 
     prevword = ""
     checkword = False
@@ -50,26 +100,27 @@ async def choosestart():
     embed = discord.Embed(
             colour=discord.Colour.red(),
             title='HOSTER CHOOSES THE STARTING WORD',
-            description="🔴({}) Type it below and send it".format(playerlist[0])
+            description="{} Type it below and send it".format(playerlist[0])
         )
-    
     await gamechannel.send(embed=embed)
     while not checkword:
-        msg = await bot.wait_for('message')
-        if(msg.author.mention == playerlist[0]):
-            prevword = (msg.content).lower()
-            checkword = prevword in englishvocab
-            if not checkword:
-                await gamechannel.send("Not a real single word! (Please reinput)")
-    
+            msg = await bot.wait_for('message')
+            if(msg.author.mention == playerlist[currplayer]):
+                prevword = (msg.content).lower()
+                checkword = prevword in englishvocab
+                if not checkword:
+                    await msg.reply("Not a real single word! (Please reinput)",mention_author=False)
     totlist.append(prevword)
-
+    checkword = False
+    currplayer = iterateplayer(currplayer,len(playerlist))
     embed = discord.Embed(
-            colour=discord.Colour.red(),
-            title=prevword,
-            description="[next player]'s turn!")
-    
-    await gamechannel.send(embed=embed)
+                colour=getplayercolour(currplayer),
+                title=prevword,
+                description="{}'s turn!".format(playerlist[currplayer]))
+        
+    await msg.reply(embed=embed,mention_author=False)
+
+    await gameon()
 
 
 #----------------------------------------------------------------#
@@ -85,6 +136,7 @@ async def start(ctx):
     global gamestartmessage_ID
     global gamechannel
     global playerlist
+    global lifelist
 
     if waiting_gamestart == False:
         gamehoster = ctx.author
@@ -99,6 +151,7 @@ async def start(ctx):
 
         startingmsg = await ctx.send(embed=embed)
         playerlist = [ctx.author.mention]
+        lifelist = [2]
         print(playerlist)
 
         await startingmsg.add_reaction('▶️')
@@ -107,7 +160,7 @@ async def start(ctx):
         gamechannel = startingmsg.channel
 
     else:
-        await ctx.send("Game already pending!")
+        await ctx.send("Game already pending/going!")
 
 @bot.command(name="rules")
 async def rules(ctx):
@@ -134,6 +187,7 @@ async def on_reaction_add(reaction, user):
             if str(reaction.emoji) == '✅':
                 if (user != gamehoster) and (len(playerlist) < 4):
                     playerlist.append(user.mention)
+                    lifelist.append(2)
                     await gamechannel.send('{} joined the game ({}/4)'.format(user.mention,len(playerlist)))
                 elif user == gamehoster:
                     await gamechannel.send('You are already the game hoster!')
@@ -143,14 +197,12 @@ async def on_reaction_add(reaction, user):
                     await reaction.message.remove_reaction('✅', user)
             if str(reaction.emoji) == '▶️':
                 if user == gamehoster:
-                    waiting_gamestart=False
                     await gamechannel.send('{} started the game!'.format(user.mention))
                     await showplayerlist()
                 else:
                     await gamechannel.send('You are not the game hoster!')
                     await reaction.message.remove_reaction('▶️', user)
-    
-    print(waiting_gamestart)
+
 
 @bot.event
 async def on_reaction_remove(reaction, user):
@@ -164,6 +216,7 @@ async def on_reaction_remove(reaction, user):
             if str(reaction.emoji) == '✅':
                 if user != gamehoster:
                     playerlist.remove(user.mention)
+                    lifelist.pop(-1)
                     await channel.send('{} left the game ({}/4)'.format(user.mention,len(playerlist)))
 
 
