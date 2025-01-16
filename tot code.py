@@ -59,7 +59,6 @@ def checkgoink(word,prevword):
         if word in prevword:
             suboink+=1
             return "SUBOINK"
-            
         elif prevword in word:
             addoink+=1
             return "ADDOINK"
@@ -70,6 +69,8 @@ def checkgoink(word,prevword):
             elif checkboink(prevword,word):
                 boink +=1
                 return "BOINK"
+            else:
+                return ""
                 
 
 #----------------------------------------------------------------#
@@ -99,24 +100,35 @@ async def gameon():
     global englishvocab
     global checkword
     global currplayer
+
+    goinktype = ""
+
     while True:
-        while not checkword:
-            msg = await bot.wait_for('message')
-            if(msg.author.mention == playerlist[currplayer]):
-                word = (msg.content).lower()
-                checkword = word in englishvocab
+        while goinktype == "" or goinktype == "WORDINLIST":
+            while not checkword:
+                msg = await bot.wait_for('message')
+                if(msg.author.mention == playerlist[currplayer]):
+                    word = (msg.content).lower()
+                    checkword = word in englishvocab
+            goinktype = checkgoink(word,prevword)
+            if goinktype == "WORDINLIST":
+                print("Word in list!")
+                goinktype = ""
+        
+        print(goinktype)
         totlist.append(word)
-        checkword = False
         currplayer = iterateplayer(currplayer,len(playerlist))
 
         embed = discord.Embed(
                 colour=getplayercolour(currplayer),
                 title=word,
                 description="{}'s turn!".format(playerlist[currplayer]))
+        await msg.reply(embed=embed,mention_author=False)
         
         print(prevword,word)
-        await msg.reply(embed=embed,mention_author=False)
         prevword = word
+        checkword = False
+        goinktype = ""
 
 
 async def showplayerlist():
@@ -149,22 +161,19 @@ async def choosestart():
 
     prevword = ""
     checkword = False
-    goinktype = ""
-
     embed = discord.Embed(
             colour=discord.Colour.red(),
             title='HOSTER CHOOSES THE STARTING WORD',
             description="{} Type it below and send it".format(playerlist[0])
         )
     await gamechannel.send(embed=embed)
-    
     while not checkword:
-            msg = await bot.wait_for('message')
-            if(msg.author.mention == playerlist[currplayer]):
-                prevword = (msg.content).lower()
-                checkword = prevword in englishvocab
-                if not checkword:
-                    await msg.reply("Not a real single word! (Please reinput)",mention_author=False)
+        msg = await bot.wait_for('message')
+        if(msg.author.mention == playerlist[currplayer]):
+            prevword = (msg.content).lower()
+            checkword = prevword in englishvocab
+            if not checkword:
+                await msg.reply("Not a real single word! (Please reinput)",mention_author=False)
     totlist.append(prevword)
     checkword = False
     currplayer = iterateplayer(currplayer,len(playerlist))
