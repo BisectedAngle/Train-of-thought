@@ -10,14 +10,69 @@ englishvocab = set(words.words())
 checkword = False
 prevword = ""
 totlist = []
-currplayer = 0
+
+suboink = 0
+addoink = 0
+froink = 0
+boink = 0
 
 waiting_gamestart = False
 gamestartmessage_ID = 0
 gamechannel = 0
 gamehoster = ""
+
+currplayer = 0
 playerlist = []
 lifelist = []
+
+def halflength(word):       #half life gap
+    return int(-(-len(word) // 2))
+
+def checkboink(word1, word2):
+    i=0
+    while(word1[i]==word2[i]):
+        i+=1
+    if i>=halflength(word1):
+        return True
+    else:
+        return False
+
+def checkfroink(word1, word2):
+    i=1
+    while(word1[-i]==word2[-i]):
+        i+=1
+    if i-1>=halflength(word1):
+        return True
+    else:
+        return False
+
+def checkgoink(word,prevword):
+    global totlist
+    global suboink
+    global addoink
+    global froink
+    global boink
+
+    if word in totlist:
+        return "WORDINLIST"
+    else:
+        if word in prevword:
+            suboink+=1
+            return "SUBOINK"
+            
+        elif prevword in word:
+            addoink+=1
+            return "ADDOINK"
+        else:
+            if checkfroink(prevword,word):
+                froink +=1
+                return "FROINK"
+            elif checkboink(prevword,word):
+                boink +=1
+                return "BOINK"
+                
+
+#----------------------------------------------------------------#
 
 def iterateplayer(currplayer, playernum):
     if currplayer == playernum-1:
@@ -50,8 +105,6 @@ async def gameon():
             if(msg.author.mention == playerlist[currplayer]):
                 word = (msg.content).lower()
                 checkword = word in englishvocab
-                if not checkword:
-                    await msg.reply("Not a real single word! (Please reinput)",mention_author=False)
         totlist.append(word)
         checkword = False
         currplayer = iterateplayer(currplayer,len(playerlist))
@@ -96,6 +149,7 @@ async def choosestart():
 
     prevword = ""
     checkword = False
+    goinktype = ""
 
     embed = discord.Embed(
             colour=discord.Colour.red(),
@@ -103,6 +157,7 @@ async def choosestart():
             description="{} Type it below and send it".format(playerlist[0])
         )
     await gamechannel.send(embed=embed)
+    
     while not checkword:
             msg = await bot.wait_for('message')
             if(msg.author.mention == playerlist[currplayer]):
