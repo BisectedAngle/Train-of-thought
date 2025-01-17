@@ -111,9 +111,12 @@ async def gameon():
                     word = (msg.content).lower()
                     checkword = word in englishvocab
             goinktype = checkgoink(word,prevword)
-            if goinktype == "WORDINLIST":
+            if goinktype == "":
+                print("Not valid goink!")
+            elif goinktype == "WORDINLIST":
                 print("Word in list!")
                 goinktype = ""
+            checkword = False
         
         print(goinktype)
         totlist.append(word)
@@ -122,12 +125,13 @@ async def gameon():
         embed = discord.Embed(
                 colour=getplayercolour(currplayer),
                 title=word,
-                description="{}'s turn!".format(playerlist[currplayer]))
+                description="{}'s turn!         Lives: {}\n\n😵- - - - - - - - - - - - - - -🚂💭".format(playerlist[currplayer],lifelist[currplayer]))
+        await msg.add_reaction('✅')
         await msg.reply(embed=embed,mention_author=False)
         
         print(prevword,word)
         prevword = word
-        checkword = False
+        # checkword = False
         goinktype = ""
 
 
@@ -174,14 +178,16 @@ async def choosestart():
             checkword = prevword in englishvocab
             if not checkword:
                 await msg.reply("Not a real single word! (Please reinput)",mention_author=False)
+    
     totlist.append(prevword)
     checkword = False
     currplayer = iterateplayer(currplayer,len(playerlist))
     embed = discord.Embed(
                 colour=getplayercolour(currplayer),
                 title=prevword,
-                description="{}'s turn!".format(playerlist[currplayer]))
-        
+                description="{}'s turn!                  Lives: {}\n😵- - - - - - - - - - - - - - -🚂💭".format(playerlist[currplayer],lifelist[currplayer]))
+    
+    await msg.add_reaction('✅')    
     await msg.reply(embed=embed,mention_author=False)
 
     await gameon()
@@ -215,7 +221,7 @@ async def start(ctx):
 
         startingmsg = await ctx.send(embed=embed)
         playerlist = [ctx.author.mention]
-        lifelist = [2]
+        lifelist = ["❤️❤️"]
         print(playerlist)
 
         await startingmsg.add_reaction('▶️')
@@ -251,7 +257,7 @@ async def on_reaction_add(reaction, user):
             if str(reaction.emoji) == '✅':
                 if (user != gamehoster) and (len(playerlist) < 4):
                     playerlist.append(user.mention)
-                    lifelist.append(2)
+                    lifelist.append("❤️❤️")
                     await gamechannel.send('{} joined the game ({}/4)'.format(user.mention,len(playerlist)))
                 elif user == gamehoster:
                     await gamechannel.send('You are already the game hoster!')
