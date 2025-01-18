@@ -125,7 +125,7 @@ async def gameon():
         embed = discord.Embed(
                 colour=getplayercolour(currplayer),
                 title=word,
-                description="{}'s turn!         Lives: {}\n\n😵- - - - - - - - - - - - - - -🚂💭".format(playerlist[currplayer],lifelist[currplayer]))
+                description="{}'s turn! {}\n\n😵- - - - - - - - - - - - - - -🚂💭".format(playerlist[currplayer],lifelist[currplayer]))
         await msg.add_reaction('✅')
         await msg.reply(embed=embed,mention_author=False)
         
@@ -185,7 +185,7 @@ async def choosestart():
     embed = discord.Embed(
                 colour=getplayercolour(currplayer),
                 title=prevword,
-                description="{}'s turn!                  Lives: {}\n😵- - - - - - - - - - - - - - -🚂💭".format(playerlist[currplayer],lifelist[currplayer]))
+                description="{}'s turn! {}\n\n😵- - - - - - - - - - - - - - -🚂💭".format(playerlist[currplayer],lifelist[currplayer]))
     
     await msg.add_reaction('✅')    
     await msg.reply(embed=embed,mention_author=False)
