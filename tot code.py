@@ -91,6 +91,7 @@ def getplayercolour(currplayer):
     if currplayer == 3:
         return discord.Colour.brand_green()
 
+
 async def gameon():
     global playerlist
     global lifelist
@@ -100,10 +101,26 @@ async def gameon():
     global englishvocab
     global checkword
     global currplayer
+    global msg
 
     goinktype = ""
 
     while True:
+        embed = discord.Embed(
+                colour=getplayercolour(currplayer),
+                title=(prevword if len(totlist)==1 else word),
+                description="{}'s turn! {}\n{}!\n\n😵- - - - - - - - - - - - - - -🚂💭".format(playerlist[currplayer],lifelist[currplayer]))
+        embed.set_footer(text=goinktype)
+        
+        await msg.add_reaction('✅')
+        await msg.reply(embed=embed,mention_author=False)
+        
+        if len(totlist)>1:
+            print(prevword,word)
+            prevword = word
+            # checkword = False
+            goinktype = ""
+
         while goinktype == "" or goinktype == "WORDINLIST":
             while not checkword:
                 msg = await bot.wait_for('message')
@@ -122,17 +139,7 @@ async def gameon():
         totlist.append(word)
         currplayer = iterateplayer(currplayer,len(playerlist))
 
-        embed = discord.Embed(
-                colour=getplayercolour(currplayer),
-                title=word,
-                description="{}'s turn! {}\n\n😵- - - - - - - - - - - - - - -🚂💭".format(playerlist[currplayer],lifelist[currplayer]))
-        await msg.add_reaction('✅')
-        await msg.reply(embed=embed,mention_author=False)
         
-        print(prevword,word)
-        prevword = word
-        # checkword = False
-        goinktype = ""
 
 
 async def showplayerlist():
@@ -162,6 +169,7 @@ async def choosestart():
     global englishvocab
     global checkword
     global currplayer
+    global msg
 
     prevword = ""
     checkword = False
@@ -182,14 +190,6 @@ async def choosestart():
     totlist.append(prevword)
     checkword = False
     currplayer = iterateplayer(currplayer,len(playerlist))
-    embed = discord.Embed(
-                colour=getplayercolour(currplayer),
-                title=prevword,
-                description="{}'s turn! {}\n\n😵- - - - - - - - - - - - - - -🚂💭".format(playerlist[currplayer],lifelist[currplayer]))
-    
-    await msg.add_reaction('✅')    
-    await msg.reply(embed=embed,mention_author=False)
-
     await gameon()
 
 
