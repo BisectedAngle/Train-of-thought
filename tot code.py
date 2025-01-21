@@ -1,4 +1,5 @@
 import discord
+import asyncio
 from discord.ext import commands
 from config import TOKEN
 from nltk.corpus import words
@@ -104,29 +105,55 @@ async def gameon():
     global msg
 
     goinktype = ""
+    timer = 15
 
     while True:
         embed = discord.Embed(
                 colour=getplayercolour(currplayer),
-                title=(prevword if len(totlist)==1 else word),
-                description="{}'s turn! {}\n{}!\n\n😵- - - - - - - - - - - - - - -🚂💭".format(playerlist[currplayer],lifelist[currplayer]))
-        embed.set_footer(text=goinktype)
+                title=(prevword if len(totlist)==1 else word)
+            )
+        
+        embed.add_field(name="", value="{}'s turn! ".format(playerlist[currplayer]), inline=True)
+        embed.add_field(name="", value=" Lives: {}".format(lifelist[currplayer]), inline=True)
+        embed.add_field(name=" ", value=" ", inline=False)
+        embed.add_field(name="Time before death: {}s".format(timer), value="", inline=False)
+        
+        if len(totlist)>1:
+            embed.set_footer(text="{}!".format(goinktype))
         
         await msg.add_reaction('✅')
-        await msg.reply(embed=embed,mention_author=False)
-        
+        sent = await msg.reply(embed=embed,mention_author=False)
+
         if len(totlist)>1:
             print(prevword,word)
             prevword = word
-            # checkword = False
             goinktype = ""
 
         while goinktype == "" or goinktype == "WORDINLIST":
+            embed = sent.embeds[0]
+
             while not checkword:
-                msg = await bot.wait_for('message')
+
+                while timer > 0:
+                    try:
+                        msg = await bot.wait_for('message',timeout=1)
+                        break
+                    except asyncio.TimeoutError:
+                        timer -= 1
+                        embed.set_field_at(3, name="Time before death: {}s".format(timer), value="", inline=False)
+                        await sent.edit(embed=embed)
+                
+                if timer == 0:
+                    break
+
                 if(msg.author.mention == playerlist[currplayer]):
                     word = (msg.content).lower()
                     checkword = word in englishvocab
+            
+            if timer == 0:
+                print("lose life")
+                break
+
             goinktype = checkgoink(word,prevword)
             if goinktype == "":
                 print("Not valid goink!")
@@ -134,10 +161,13 @@ async def gameon():
                 print("Word in list!")
                 goinktype = ""
             checkword = False
-        
-        print(goinktype)
-        totlist.append(word)
+            
+            
+        if timer > 0:
+            print(goinktype)
+            totlist.append(word)
         currplayer = iterateplayer(currplayer,len(playerlist))
+        timer = 15
 
         
 
