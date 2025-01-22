@@ -11,6 +11,7 @@ englishvocab = set(words.words())
 checkword = False
 prevword = ""
 totlist = []
+totlistlen = 1
 
 suboink = 0
 addoink = 0
@@ -72,9 +73,6 @@ def checkgoink(word,prevword):
                 return "BOINK"
             else:
                 return ""
-                
-
-#----------------------------------------------------------------#
 
 def iterateplayer(currplayer, playernum):
     if currplayer == playernum-1:
@@ -92,7 +90,19 @@ def getplayercolour(currplayer):
     if currplayer == 3:
         return discord.Colour.brand_green()
 
+def gettime(totlistlen):
+    if totlistlen >= 15 and totlistlen < 25:
+        return 10
+    elif totlistlen >= 25 and totlistlen < 35:
+        return 7
+    elif totlistlen >= 35:
+        return 5
+    else:
+        return 7
+    
 
+#----------------------------------------------------------------#
+    
 async def gameon():
     global playerlist
     global lifelist
@@ -103,14 +113,15 @@ async def gameon():
     global checkword
     global currplayer
     global msg
+    global totlistlen
 
     goinktype = ""
-    timer = 15
+    timer = gettime(totlistlen)
 
     while True:
         embed = discord.Embed(
                 colour=getplayercolour(currplayer),
-                title=(prevword if len(totlist)==1 else word)
+                title=(prevword if totlistlen==1 else word)
             )
         
         embed.add_field(name="", value="{}'s turn! ".format(playerlist[currplayer]), inline=True)
@@ -118,13 +129,13 @@ async def gameon():
         embed.add_field(name=" ", value=" ", inline=False)
         embed.add_field(name="Time before death: {}s".format(timer), value="", inline=False)
         
-        if len(totlist)>1:
+        if len(totlist)>1 and goinktype != "":
             embed.set_footer(text="{}!".format(goinktype))
+            await msg.add_reaction('✅')
         
-        await msg.add_reaction('✅')
-        sent = await msg.reply(embed=embed,mention_author=False)
+        sent = await gamechannel.send(embed=embed)
 
-        if len(totlist)>1:
+        if totlistlen>1:
             print(prevword,word)
             prevword = word
             goinktype = ""
@@ -143,15 +154,19 @@ async def gameon():
                         embed.set_field_at(3, name="Time before death: {}s".format(timer), value="", inline=False)
                         await sent.edit(embed=embed)
                 
-                if timer == 0:
-                    break
 
                 if(msg.author.mention == playerlist[currplayer]):
                     word = (msg.content).lower()
                     checkword = word in englishvocab
+                
+                if timer == 0:
+                    word = prevword
+                    break
+                
             
             if timer == 0:
                 print("lose life")
+                lifelist[currplayer] -= 1
                 break
 
             goinktype = checkgoink(word,prevword)
@@ -166,8 +181,11 @@ async def gameon():
         if timer > 0:
             print(goinktype)
             totlist.append(word)
+            totlistlen += 1
+        
         currplayer = iterateplayer(currplayer,len(playerlist))
-        timer = 15
+        print(totlistlen)
+        timer = gettime(totlistlen)
 
         
 
@@ -251,7 +269,7 @@ async def start(ctx):
 
         startingmsg = await ctx.send(embed=embed)
         playerlist = [ctx.author.mention]
-        lifelist = ["❤️❤️"]
+        lifelist = [3]
         print(playerlist)
 
         await startingmsg.add_reaction('▶️')
@@ -287,7 +305,7 @@ async def on_reaction_add(reaction, user):
             if str(reaction.emoji) == '✅':
                 if (user != gamehoster) and (len(playerlist) < 4):
                     playerlist.append(user.mention)
-                    lifelist.append("❤️❤️")
+                    lifelist.append(3)
                     await gamechannel.send('{} joined the game ({}/4)'.format(user.mention,len(playerlist)))
                 elif user == gamehoster:
                     await gamechannel.send('You are already the game hoster!')
