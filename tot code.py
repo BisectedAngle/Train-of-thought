@@ -102,7 +102,38 @@ def gettime(totlistlen):
     
 
 #----------------------------------------------------------------#
+
+async def showtotlist():
+    global totlist
+    global winner
+    global gamechannel
+
+    global addoink
+    global suboink
+    global froink
+    global boink
+
+    totstring = totlist[0]
+    for i in range(1,len(totlist)):
+        totstring += f" → {totlist[i]}"
     
+    embed = discord.Embed(
+        colour=discord.Color.gold(),
+        title=("TRAIN OF THOUGHT GAME STATS"),
+        description=f"Winner: {winner}"
+    )
+
+    embed.add_field(name=f"{len(totlist)} words totted", value=totstring, inline=False)
+    embed.add_field(name=f"ADDOINKS: {addoink}", value="", inline=True)
+    embed.add_field(name=f"SUBOINKS: {suboink}", value="", inline=True)
+    embed.add_field(name=f"FROINKS: {froink}", value="", inline=False)
+    embed.add_field(name=f"BOINKS: {boink}", value="", inline=False)
+
+    await gamechannel.send(embed=embed)
+
+
+
+
 async def gameon():
     global playerlist
     global lifelist
@@ -114,6 +145,8 @@ async def gameon():
     global currplayer
     global msg
     global totlistlen
+    global winner
+    global waiting_gamestart
 
     goinktype = ""
     timer = gettime(totlistlen)
@@ -124,10 +157,11 @@ async def gameon():
                 title=(prevword if totlistlen==1 else word)
             )
         
+        embed.add_field(name="\n", value="", inline=False)
         embed.add_field(name="", value="{}'s turn! ".format(playerlist[currplayer]), inline=True)
         embed.add_field(name="", value=" Lives: {}".format(lifelist[currplayer]), inline=True)
-        embed.add_field(name=" ", value=" ", inline=False)
-        embed.add_field(name="Time before death: {}s".format(timer), value="", inline=False)
+        embed.add_field(name=" ", value=" ", inline=True)
+        embed.add_field(name="Time before death: {}s".format(timer), value="", inline=True)
         
         if len(totlist)>1 and goinktype != "":
             embed.set_footer(text="{}!".format(goinktype))
@@ -176,7 +210,9 @@ async def gameon():
                 print("Word in list!")
                 goinktype = ""
             checkword = False
-            
+        
+        if lifelist[currplayer]==0:
+            break
             
         if timer > 0:
             print(goinktype)
@@ -186,8 +222,10 @@ async def gameon():
         currplayer = iterateplayer(currplayer,len(playerlist))
         print(totlistlen)
         timer = gettime(totlistlen)
-
-        
+    
+    winner = playerlist[iterateplayer(currplayer,len(playerlist))]
+    waiting_gamestart = False
+    await showtotlist()
 
 
 async def showplayerlist():
